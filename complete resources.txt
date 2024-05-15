@@ -1,0 +1,230 @@
+1)
+
+For a new analysis on Twitter data, we can create Python scripts tailored to handle Twitter data processing using Hadoop Streaming. Here's how you can proceed:
+
+### Mapper Script (mapper_twitter.py):
+```python
+#!/usr/bin/env python3
+
+import sys
+import json
+
+for line in sys.stdin:
+    try:
+        tweet = json.loads(line)
+        if 'user' in tweet and 'friends' in tweet['user']:
+            user = tweet['user']['screen_name']
+            friends = tweet['user']['friends']
+            for friend in friends:
+                if user < friend:
+                    print(f"{user},{friend}\t{friends}")
+                else:
+                    print(f"{friend},{user}\t{friends}")
+    except Exception as e:
+        sys.stderr.write(f"Error processing JSON: {e}\n")
+        continue
+```
+
+### Reducer Script (reducer_twitter.py):
+```python
+#!/usr/bin/env python3
+
+import sys
+
+current_pair = None
+mutual_friends = []
+
+for line in sys.stdin:
+    line = line.strip()
+    if line:
+        pair, friends = line.split("\t")
+        if current_pair != pair:
+            if current_pair:
+                print(f"{current_pair}\t{','.join(mutual_friends)}")
+            current_pair = pair
+            mutual_friends = []
+        mutual_friends.append(friends)
+
+if current_pair:
+    print(f"{current_pair}\t{','.join(mutual_friends)}")
+```
+
+This setup should enable you to perform network analysis on Twitter data using Hadoop Streaming. Let me know if you need further assistance!
+
+
+
+
+2) 
+
+Certainly! Here's a complete example of a `twitter_data.txt` file with synthetic data:
+
+```
+{"user": {"screen_name": "user1", "friends": ["friend1", "friend2", "friend3"]}}
+{"user": {"screen_name": "user2", "friends": ["friend1", "friend4", "friend5"]}}
+{"user": {"screen_name": "user3", "friends": ["friend2", "friend6", "friend7"]}}
+{"user": {"screen_name": "user4", "friends": ["friend3", "friend8", "friend9"]}}
+{"user": {"screen_name": "user5", "friends": ["friend4", "friend10", "friend11"]}}
+{"user": {"screen_name": "user6", "friends": ["friend5", "friend12", "friend13"]}}
+{"user": {"screen_name": "user7", "friends": ["friend6", "friend14", "friend15"]}}
+{"user": {"screen_name": "user8", "friends": ["friend7", "friend16", "friend17"]}}
+{"user": {"screen_name": "user9", "friends": ["friend8", "friend18", "friend19"]}}
+{"user": {"screen_name": "user10", "friends": ["friend9", "friend20", "friend21"]}}
+{"user": {"screen_name": "user11", "friends": ["friend10", "friend22", "friend23"]}}
+{"user": {"screen_name": "user12", "friends": ["friend11", "friend24", "friend25"]}}
+{"user": {"screen_name": "user13", "friends": ["friend12", "friend26", "friend27"]}}
+{"user": {"screen_name": "user14", "friends": ["friend13", "friend28", "friend29"]}}
+{"user": {"screen_name": "user15", "friends": ["friend14", "friend30", "friend31"]}}
+{"user": {"screen_name": "user16", "friends": ["friend15", "friend32", "friend33"]}}
+{"user": {"screen_name": "user17", "friends": ["friend16", "friend34", "friend35"]}}
+{"user": {"screen_name": "user18", "friends": ["friend17", "friend36", "friend37"]}}
+{"user": {"screen_name": "user19", "friends": ["friend18", "friend38", "friend39"]}}
+{"user": {"screen_name": "user20", "friends": ["friend19", "friend40", "friend41"]}}
+```
+
+This file contains synthetic Twitter data, with each line representing a tweet. Each tweet includes the user's screen name and their friends.
+
+Feel free to use this data for testing and experimentation. Let me know if you need any further assistance!
+
+
+3)
+
+To perform social network analysis using Hadoop, you can follow these general steps:
+
+1. **Set Up Hadoop Cluster**: Install and configure Hadoop on your system or set up a Hadoop cluster if you're working in a distributed environment.
+
+2. **Prepare Input Data**: Prepare your input data in a suitable format. In the case of Twitter data, it might be in JSON format where each line represents a tweet with the user's screen name and their friends.
+
+3. **Write Mapper and Reducer**: Write the mapper and reducer functions in your preferred programming language (e.g., Java, Python) to process the input data and perform the desired analysis. The mapper function reads input data, extracts relevant information, and emits key-value pairs. The reducer function aggregates the emitted key-value pairs and produces the final output.
+
+4. **Compile or Package Code**: Compile your Java code or package your Python code along with any dependencies into a JAR file if necessary.
+
+5. **Run Hadoop Job**: Use the `hadoop jar` command to submit your job to the Hadoop cluster. Specify the input and output paths, as well as the mapper and reducer classes or scripts.
+
+6. **Monitor Job Progress**: Monitor the progress of your Hadoop job using Hadoop's web interface or command-line tools.
+
+7. **Retrieve Output**: Once the job is complete, retrieve the output from the specified output path.
+
+Here's an example of how you might run a Hadoop streaming job using Python scripts for mapper and reducer:
+
+```bash
+hadoop jar /path/to/hadoop-streaming.jar \
+    -files /path/to/mapper.py,/path/to/reducer.py \
+    -mapper "python3 mapper.py" \
+    -reducer "python3 reducer.py" \
+    -input /path/to/input/data.txt \
+    -output /path/to/output/directory
+```
+
+Make sure to replace `/path/to/hadoop-streaming.jar`, `/path/to/mapper.py`, `/path/to/reducer.py`, `/path/to/input/data.txt`, and `/path/to/output/directory` with the appropriate paths on your system.
+
+Feel free to ask if you need more specific guidance on any of these steps!
+
+
+4)
+
+Apologies for any confusion. Let's clarify.
+
+In the output you provided, each line represents a user-user pair along with a list of common friends between them. For example:
+
+```
+friend1,user1    ['friend1', 'friend2', 'friend3']
+```
+
+Here:
+- `friend1,user1`: This indicates that there is a connection between user1 and friend1.
+- `['friend1', 'friend2', 'friend3']`: This is the list of common friends between user1 and friend1.
+
+So, this line suggests that user1 and friend1 share the friends friend1, friend2, and friend3.
+
+Similarly, each line in the output follows the same pattern, indicating a user-user pair and the list of their common friends.
+
+I hope this clears up any confusion. If you have further questions or need more clarification, feel free to ask!
+
+
+
+5)
+
+To remove self-loops from the graph (edges that connect a node to itself), you can simply skip adding such edges while constructing the graph. Here's the modified code to achieve that:
+
+```python
+import networkx as nx
+import matplotlib.pyplot as plt
+import ast
+
+# Read data from a text file
+output_data = []
+with open("output_data.txt", "r") as file:
+    for line in file:
+        line = line.strip().split("\t")
+        friend, user = line[0].split(",")
+        common_friends = ast.literal_eval(line[1])
+        output_data.append((friend.strip(), user.strip(), common_friends))
+
+# Create a graph
+G = nx.Graph()
+
+# Add nodes and edges to the graph
+for friend, user, common_friends in output_data:
+    G.add_node(friend, label=friend, color="orange", size=1000)
+    G.add_node(user, label=user, color="blue", size=2000)
+    if friend != user:  # Avoid adding self-loops
+        G.add_edge(friend, user)
+    for common_friend in common_friends:
+        G.add_node(common_friend, label=common_friend, color="green", size=500)
+        if common_friend != friend and common_friend != user:  # Avoid adding self-loops
+            G.add_edge(friend, common_friend)
+            G.add_edge(user, common_friend)
+
+# Visualize the graph with Kamada-Kawai layout
+pos = nx.kamada_kawai_layout(G)
+node_color = [G.nodes[n]["color"] for n in G.nodes()]
+node_size = [G.nodes[n]["size"] for n in G.nodes()]
+
+# Draw nodes
+nx.draw_networkx_nodes(G, pos, node_color=node_color, node_size=node_size)
+
+# Draw edges
+nx.draw_networkx_edges(G, pos)
+
+# Draw labels
+node_labels = nx.get_node_attributes(G, "label")
+nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=10, font_family="sans-serif", font_color="black")
+
+# Legend for node colors
+node_legend = {
+    "Friend": "orange",
+    "User": "blue",
+    "Common Friend": "green"
+}
+plt.legend(handles=[plt.Line2D([0], [0], marker="o", color=color, label=label, markersize=8, linestyle="None") for label, color in node_legend.items()], loc="upper left")
+
+plt.title("Twitter User Mutual Friends Analysis")
+plt.axis("off")  # Hide axis
+plt.show()
+```
+
+This code will skip adding self-loops while constructing the graph, ensuring that nodes are not connected to themselves.
+
+
+6)
+
+To copy a file stored in Hadoop Distributed File System (HDFS) to the local filesystem (normal filesystem), you can use the `hadoop fs -copyToLocal` command. Here's how you can do it:
+
+```bash
+hadoop fs -copyToLocal /path/in/hdfs/part-00000 /path/in/local/filesystem/part-00000
+```
+
+Replace `/path/in/hdfs/part-00000` with the full path of the file in HDFS that you want to copy, and `/path/in/local/filesystem/part-00000` with the destination path in the local filesystem where you want to save the copied file.
+
+For example, if you want to copy a file named `part-00000` from the HDFS directory `/user/bsau/social_network_analysisSSSSSSSSSSSzzzzzzz/` to the local directory `/home/bsau/output/`, you would run:
+
+```bash
+hadoop fs -copyToLocal /user/bsau/social_network_analysisSSSSSSSSSSSzzzzzzz/part-00000 /home/bsau/output/part-00000
+```
+
+This command will copy the file from HDFS to the specified local directory.
+
+
+
+7)
+

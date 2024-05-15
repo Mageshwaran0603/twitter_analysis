@@ -1,0 +1,4 @@
+hadoop fs -copyToLocal /path/in/hdfs/part-00000 /path/in/local/filesystem/part-00000
+
+
+hadoop fs -copyToLocal /user/bsau/social_network_analysisSSSSSSSSSSSzzzzzzz/part-00000 /home/bsau/output/part-00000
